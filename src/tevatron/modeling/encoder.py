@@ -175,7 +175,11 @@ class EncoderModel(nn.Module):
         # load pre-trained
         else:
             lm_q = cls.TRANSFORMER_CLS.from_pretrained(model_args.model_name_or_path, **hf_kwargs)
-            lm_p = copy.deepcopy(lm_q) if model_args.untie_encoder else lm_q
+            if model_args.p_model_name_or_path:
+                lm_p = cls.TRANSFORMER_CLS.from_pretrained(model_args.p_model_name_or_path, **hf_kwargs)
+                model_args.untie_encoder = True
+            else:
+                lm_p = copy.deepcopy(lm_q) if model_args.untie_encoder else lm_q
 
         if model_args.add_pooler:
             pooler = cls.build_pooler(model_args)
@@ -246,8 +250,8 @@ class EncoderModel(nn.Module):
 
     def save(self, output_dir: str):
         if self.untie_encoder:
-            os.makedirs(os.path.join(output_dir, 'query_model'))
-            os.makedirs(os.path.join(output_dir, 'passage_model'))
+            os.makedirs(os.path.join(output_dir, 'query_model'), exist_ok=True)
+            os.makedirs(os.path.join(output_dir, 'passage_model'), exist_ok=True)
             self.lm_q.save_pretrained(os.path.join(output_dir, 'query_model'))
             self.lm_p.save_pretrained(os.path.join(output_dir, 'passage_model'))
         else:

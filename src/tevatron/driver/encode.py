@@ -45,11 +45,11 @@ def main():
     )
 
     num_labels = 1
-    config = AutoConfig.from_pretrained(
-        model_args.config_name if model_args.config_name else model_args.model_name_or_path,
-        num_labels=num_labels,
-        cache_dir=model_args.cache_dir,
-    )
+    # config = AutoConfig.from_pretrained(
+    #     model_args.config_name if model_args.config_name else model_args.model_name_or_path,
+    #     num_labels=num_labels,
+    #     cache_dir=model_args.cache_dir,
+    # )
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir
@@ -57,7 +57,7 @@ def main():
 
     model = DenseModel.load(
         model_name_or_path=model_args.model_name_or_path,
-        config=config,
+        # config=config,
         cache_dir=model_args.cache_dir,
     )
 

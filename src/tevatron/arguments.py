@@ -25,6 +25,9 @@ class ModelArguments:
         default=False,
         metadata={"help": "no weight sharing between qry passage encoders"}
     )
+    p_model_name_or_path: Optional[str] = field(
+        default=None, metadata={"help": "Name or path of the passage encoder, if different to qry"}
+    )
 
     # out projection
     add_pooler: bool = field(default=False)

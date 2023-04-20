@@ -22,7 +22,7 @@ class DensePooler(EncoderPooler):
         if q is not None:
             rep = self.linear_q(q[:, 0])
         elif p is not None:
-            rep =  self.linear_p(p[:, 0])
+            rep = self.linear_p(p[:, 0])
         else:
             raise ValueError
         if self.normalize:

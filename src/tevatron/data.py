@@ -1,6 +1,6 @@
 import random
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 import datasets
 from torch.utils.data import Dataset
@@ -13,13 +13,15 @@ from .trainer import TevatronTrainer
 import logging
 logger = logging.getLogger(__name__)
 
+TOKENIZER_TYPE = Union[PreTrainedTokenizer, Tuple[PreTrainedTokenizer, PreTrainedTokenizer]]
+
 
 class TrainDataset(Dataset):
     def __init__(
             self,
             data_args: DataArguments,
             dataset: datasets.Dataset,
-            tokenizer: PreTrainedTokenizer,
+            tokenizer: TOKENIZER_TYPE,
             trainer: TevatronTrainer = None,
     ):
         self.train_data = dataset
@@ -30,7 +32,11 @@ class TrainDataset(Dataset):
         self.total_len = len(self.train_data)
 
     def create_one_example(self, text_encoding: List[int], is_query=False):
-        item = self.tok.prepare_for_model(
+        if isinstance(self.tok, PreTrainedTokenizer):
+            tok = self.tok
+        else:
+            tok = self.tok[0] if is_query else self.tok[1]
+        item = tok.prepare_for_model(
             text_encoding,
             truncation='only_first',
             max_length=self.data_args.q_max_len if is_query else self.data_args.p_max_len,
@@ -105,15 +111,19 @@ class EncodeDataset(Dataset):
         return text_id, encoded_text
 
 
-@dataclass
 class QPCollator(DataCollatorWithPadding):
     """
     Wrapper that does conversion from List[Tuple[encode_qry, encode_psg]] to List[qry], List[psg]
     and pass batch separately to the actual collator.
     Abstract out data detail for the model.
     """
-    max_q_len: int = 32
-    max_p_len: int = 128
+    def __init__(self, tokenizer: TOKENIZER_TYPE, max_q_len: int = 32, max_p_len: int = 128):
+        if isinstance(tokenizer, PreTrainedTokenizer):
+            self.q_tokenizer, self.p_tokenizer = tokenizer, tokenizer
+        else:
+            self.q_tokenizer, self.p_tokenizer = tokenizer
+        self.max_q_len = max_q_len
+        self.max_p_len = max_p_len
 
     def __call__(self, features):
         qq = [f[0] for f in features]
@@ -124,13 +134,13 @@ class QPCollator(DataCollatorWithPadding):
         if isinstance(dd[0], list):
             dd = sum(dd, [])
 
-        q_collated = self.tokenizer.pad(
+        q_collated = self.q_tokenizer.pad(
             qq,
             padding='max_length',
             max_length=self.max_q_len,
             return_tensors="pt",
         )
-        d_collated = self.tokenizer.pad(
+        d_collated = self.q_tokenizer.pad(
             dd,
             padding='max_length',
             max_length=self.max_p_len,

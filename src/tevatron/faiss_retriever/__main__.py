@@ -1,5 +1,5 @@
 import pickle
-
+import json
 import numpy as np
 import glob
 from argparse import ArgumentParser
@@ -37,6 +37,19 @@ def write_ranking(corpus_indices, corpus_scores, q_lookup, ranking_save_file):
                 f.write(f'{qid}\t{idx}\t{s}\n')
 
 
+def write_ranking_json(corpus_indices, corpus_scores, q_lookup, ranking_save_file):
+    with open(ranking_save_file, 'w') as f:
+        output = []
+        for qid, q_doc_scores, q_doc_indices in zip(q_lookup, corpus_scores, corpus_indices):
+            score_list = [(s, idx) for s, idx in zip(q_doc_scores, q_doc_indices)]
+            score_list = sorted(score_list, key=lambda x: x[0], reverse=True)
+            output.append({
+                'id': qid,
+                'nn': [idx for s, idx in score_list]
+            })
+        json.dump(output, f)
+
+
 def pickle_load(path):
     with open(path, 'rb') as f:
         reps, lookup = pickle.load(f)
@@ -56,6 +69,7 @@ def main():
     parser.add_argument('--depth', type=int, default=1000)
     parser.add_argument('--save_ranking_to', required=True)
     parser.add_argument('--save_text', action='store_true')
+    parser.add_argument('--save_json', action='store_true')
     parser.add_argument('--quiet', action='store_true')
 
     args = parser.parse_args()
@@ -83,7 +97,9 @@ def main():
 
     if args.save_text:
         write_ranking(psg_indices, all_scores, q_lookup, args.save_ranking_to)
-    else:
+    if args.save_json:
+        write_ranking_json(psg_indices, all_scores, q_lookup, args.save_ranking_to)
+    if not (args.save_text or args.save_json):
         pickle_save((all_scores, psg_indices), args.save_ranking_to)
 
 

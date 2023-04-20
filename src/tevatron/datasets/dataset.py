@@ -1,5 +1,6 @@
 from datasets import load_dataset
 from transformers import PreTrainedTokenizer
+from typing import Union, Tuple
 from .preprocessor import TrainPreProcessor, QueryPreProcessor, CorpusPreProcessor
 from ..arguments import DataArguments
 
@@ -12,12 +13,15 @@ PROCESSOR_INFO = {
     'Tevatron/wikipedia-squad': DEFAULT_PROCESSORS,
     'Tevatron/scifact': DEFAULT_PROCESSORS,
     'Tevatron/msmarco-passage': DEFAULT_PROCESSORS,
-    'json': [None, None, None]
+    'json': DEFAULT_PROCESSORS
 }
 
 
 class HFTrainDataset:
-    def __init__(self, tokenizer: PreTrainedTokenizer, data_args: DataArguments, cache_dir: str):
+    def __init__(self,
+                 tokenizer: Union[PreTrainedTokenizer, Tuple[PreTrainedTokenizer, PreTrainedTokenizer]],
+                 data_args: DataArguments,
+                 cache_dir: str):
         data_files = data_args.train_path
         if data_files:
             data_files = {data_args.dataset_split: data_files}
@@ -31,7 +35,7 @@ class HFTrainDataset:
         self.p_max_len = data_args.p_max_len
         self.proc_num = data_args.dataset_proc_num
         self.neg_num = data_args.train_n_passages - 1
-        self.separator = getattr(self.tokenizer, data_args.passage_field_separator, data_args.passage_field_separator)
+        self.separator = data_args.passage_field_separator
 
     def process(self, shard_num=1, shard_idx=0):
         self.dataset = self.dataset.shard(shard_num, shard_idx)

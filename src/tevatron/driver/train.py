@@ -4,10 +4,7 @@ import sys
 
 import torch
 from transformers import AutoConfig, AutoTokenizer
-from transformers import (
-    HfArgumentParser,
-    set_seed,
-)
+from transformers import HfArgumentParser, set_seed
 
 from tevatron.arguments import ModelArguments, DataArguments, \
     TevatronTrainingArguments as TrainingArguments
@@ -67,21 +64,26 @@ def main():
     )
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
-        cache_dir=model_args.cache_dir
+        cache_dir=model_args.cache_dir, use_fast=False
     )
+    if model_args.p_model_name_or_path:
+        p_tokenizer = AutoTokenizer.from_pretrained(
+            model_args.p_model_name_or_path, cache_dir=model_args.cache_dir, use_fast=False)
+        tokenizer = (tokenizer, p_tokenizer)
     model = DenseModel.build(
         model_args,
         training_args,
-        config=config,
+        # config=config,
         cache_dir=model_args.cache_dir,
     )
 
-    train_dataset = HFTrainDataset(tokenizer=tokenizer, data_args=data_args,
-                                   cache_dir=data_args.data_cache_dir or model_args.cache_dir)
+    hf_dataset = HFTrainDataset(tokenizer=tokenizer, data_args=data_args,
+                                cache_dir=data_args.data_cache_dir or model_args.cache_dir)
     if training_args.local_rank > 0:
         print("Waiting for main process to perform the mapping")
         torch.distributed.barrier()
-    train_dataset = TrainDataset(data_args, train_dataset.process(), tokenizer)
+    train_dataset = TrainDataset(data_args, hf_dataset.process(), tokenizer)
+    # val_dataset = TrainDataset(data_args, hf_dataset.process('val'), tokenizer)
     if training_args.local_rank == 0:
         print("Loading results from main process")
         torch.distributed.barrier()
@@ -91,6 +93,7 @@ def main():
         model=model,
         args=training_args,
         train_dataset=train_dataset,
+        # eval_dataset=val_dataset,
         data_collator=QPCollator(
             tokenizer,
             max_p_len=data_args.p_max_len,
@@ -98,11 +101,18 @@ def main():
         ),
     )
     train_dataset.trainer = trainer
+    # val_dataset.trainer = trainer
 
     trainer.train()  # TODO: resume training
     trainer.save_model()
+    # Save tokenizer
     if trainer.is_world_process_zero():
-        tokenizer.save_pretrained(training_args.output_dir)
+        if model_args.p_model_name_or_path:
+            q_tokenizer, p_tokenizer = tokenizer
+            q_tokenizer.save_pretrained(os.path.join(training_args.output_dir, 'query_model'))
+            p_tokenizer.save_pretrained(os.path.join(training_args.output_dir, 'passage_model'))
+        else:
+            tokenizer.save_pretrained(training_args.output_dir)
 
 
 if __name__ == "__main__":
