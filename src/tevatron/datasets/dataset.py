@@ -27,7 +27,9 @@ class HFTrainDataset:
             data_files = {data_args.dataset_split: data_files}
         self.dataset = load_dataset(data_args.dataset_name,
                                     data_args.dataset_language,
-                                    data_files=data_files, cache_dir=cache_dir, use_auth_token=True)[data_args.dataset_split]
+                                    data_files=data_files,
+                                    cache_dir=cache_dir,
+                                    use_auth_token=True)[data_args.dataset_split]
         self.preprocessor = PROCESSOR_INFO[data_args.dataset_name][0] if data_args.dataset_name in PROCESSOR_INFO\
             else DEFAULT_PROCESSORS[0]
         self.tokenizer = tokenizer

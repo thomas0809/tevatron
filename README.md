@@ -3,9 +3,17 @@
 1. Follow the instructions below and install this repo as editable;
 2. Path of original data `/Mounts/rbg-storage1/users/yujieq/textreact/data`
 3. Path of preprocessed data for Tevatron `/Mounts/rbg-storage1/users/yujieq/tevatron/preprocessed`
-4. Preprocessing script `scripts/preprocess_condition.py`. Change the code to process the grant data.
-5. Example script for train/encode/retrieve on the USPTO_condition_MIT dataset `scripts/train_rxntext_epoch.sh`
-6. Evaluation script `python -m tevatron.faiss_retriever.evaluate --file output/rxntext_ep50/test_rank.json`
+4. Preprocessing script for reaction condition recommendation `scripts/preprocess_condition.py`,
+for retrosynthesis `scripts/preprocess_retro.py`
+5. Example scripts for train/encode/retrieve
+   - USPTO_condition_MIT: `scripts/train_rxntext_batch.sh`
+   - USPTO_condition_year: `scripts/train_rxntest_year.sh`
+   - USPTO_50K: `scripts/train_rxntext_retro_rn.sh`
+   - USPTO_50K_year: `scripts/train_rxntext_retro_year_rn.sh`
+6. Evaluation script 
+   ```
+   python -m tevatron.faiss_retriever.evaluate --corpus data/USPTO_rxn_corpus.csv --file output/rxntext_b512_ep50/test_rank.json
+   ```
 
 # Tevatron
 Tevatron is a simple and efficient toolkit for training and running dense retrievers with deep language models. 

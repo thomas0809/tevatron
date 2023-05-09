@@ -1,5 +1,7 @@
 import json
 import os
+import random
+
 import pandas as pd
 from tqdm import tqdm
 
@@ -51,5 +53,32 @@ def preprocess():
                 of.write(f"{json.dumps(instance, ensure_ascii=False)}\n")
 
 
+def random_negative():
+    data_path = "data/USPTO_condition_year/"
+    preprocessed_path = "preprocessed/USPTO_condition_year/"
+    os.makedirs(preprocessed_path, exist_ok=True)
+
+    corpus_file = os.path.join("data/USPTO_rxn_corpus.csv")
+    print(f"Loading corpus from {corpus_file}")
+    corpus = pd.read_csv(corpus_file, keep_default_na=False)
+
+    ofn = os.path.join(preprocessed_path, f"train_rn.jsonl")
+    lines = open(os.path.join(preprocessed_path, 'train.jsonl')).readlines()
+    with open(ofn, "w") as of:
+        for line in tqdm(lines):
+            instance = json.loads(line)
+            for j in range(3):
+                row = corpus.iloc[random.randrange(len(corpus))]
+                if row['paragraph_text'] == instance['positive_passages'][0]['text']:
+                    continue
+                instance['negative_passages'].append({
+                    'docid': row['id'],
+                    'title': row['heading_text'],
+                    'text': row['paragraph_text']
+                })
+            of.write(f"{json.dumps(instance, ensure_ascii=False)}\n")
+
+
 if __name__ == "__main__":
-    preprocess()
+    # preprocess()
+    random_negative()

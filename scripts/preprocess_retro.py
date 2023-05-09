@@ -1,15 +1,36 @@
 import json
 import os
+import random
 import pandas as pd
 from tqdm import tqdm
 
+# data_path = "data/USPTO_50K/matched1/"
+# preprocessed_path = "preprocessed/USPTO_50K/"
+# corpus_file = "data/USPTO_rxn_corpus.csv"
+
+data_path = "data/USPTO_50K_year/"
+preprocessed_path = "preprocessed/USPTO_50K_year/"
+corpus_file = "data/USPTO_50K_year/corpus_before_2012.csv"
+
+def preprocess_corpus():
+    print(f"Loading corpus from {corpus_file}")
+    corpus = pd.read_csv(corpus_file, keep_default_na=False)
+
+    ofn = os.path.join(preprocessed_path, 'corpus.jsonl')
+    with open(ofn, "w") as of:
+        for i, row in corpus.iterrows():
+            instance = {
+                'docid': row['id'],
+                'title': row['heading_text'],
+                'text': row['paragraph_text']
+            }
+            of.write(f"{json.dumps(instance, ensure_ascii=False)}\n")
+
 
 def preprocess():
-    data_path = "data/USPTO_50K/matched/"
-    preprocessed_path = "preprocessed/USPTO_50K/"
     os.makedirs(preprocessed_path, exist_ok=True)
 
-    corpus_file = os.path.join("data/USPTO_rxn_corpus.csv")
+    corpus_file = "data/USPTO_rxn_corpus.csv"
     print(f"Loading corpus from {corpus_file}")
     corpus = pd.read_csv(corpus_file, keep_default_na=False)
 
@@ -26,7 +47,7 @@ def preprocess():
         ofn = os.path.join(preprocessed_path, f"{phase}.jsonl")
         with open(ofn, "w") as of:
             for i, row in tqdm(rxn_df.iterrows()):
-                query_id = row["matched_id"]
+                query_id = row["id"]
                 if phase == 'train_matched' and query_id.startswith('unk'):
                     continue
                 query = row["product_smiles"]
@@ -47,21 +68,18 @@ def preprocess():
 
 
 def random_negative():
-    data_path = "data/USPTO_50K/matched/"
-    preprocessed_path = "preprocessed/USPTO_50K/"
     os.makedirs(preprocessed_path, exist_ok=True)
 
-    corpus_file = os.path.join("data/USPTO_rxn_corpus.csv")
     print(f"Loading corpus from {corpus_file}")
     corpus = pd.read_csv(corpus_file, keep_default_na=False)
 
     ofn = os.path.join(preprocessed_path, f"train_matched_rn.jsonl")
     lines = open(os.path.join(preprocessed_path, 'train_matched.jsonl')).readlines()
     with open(ofn, "w") as of:
-        for line in lines:
+        for line in tqdm(lines):
             instance = json.loads(line)
-            sample = corpus.sample(n=10)
-            for i, row in sample.iterrows():
+            for j in range(10):
+                row = corpus.iloc[random.randrange(len(corpus))]
                 if row['paragraph_text'] == instance['positive_passages'][0]['text']:
                     continue
                 instance['negative_passages'].append({
@@ -75,3 +93,4 @@ def random_negative():
 if __name__ == "__main__":
     # preprocess()
     random_negative()
+    # preprocess_corpus()
