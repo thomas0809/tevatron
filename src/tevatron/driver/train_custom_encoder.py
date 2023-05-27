@@ -8,11 +8,11 @@ from transformers import HfArgumentParser, set_seed
 
 from tevatron.arguments import ModelArguments, DataArguments, \
     TevatronTrainingArguments as TrainingArguments
-from tevatron.data import TrainDataset, QPCollator
-from tevatron.data_custom_encoder import FPCollator#, GPCollator
+# from tevatron.data import TrainDataset, QPCollator
+from tevatron.data_custom_encoder import TrainDataset, FPCollator#, GPCollator
 from tevatron.modeling import DenseModel, CustomModel
 from tevatron.trainer import TevatronTrainer as Trainer, GCTrainer
-from tevatron.datasets import HFTrainDataset
+from tevatron.datasets.dataset_custom import HFTrainDataset
 
 logger = logging.getLogger(__name__)
 
@@ -97,9 +97,9 @@ def main():
         torch.distributed.barrier()
 
     trainer_cls = GCTrainer if training_args.grad_cache else Trainer
-    if model_args.model_name_or_path.startswith("fingerprint"):
+    if model_args.custom_model_name.startswith("fingerprint"):
         data_collator = FPCollator(tokenizer, max_p_len=data_args.p_max_len)
-    elif model_args.model_name_or_path.startswith("graph"):
+    elif model_args.custom_model_name.startswith("graph"):
         data_collator = GPCollator(tokenizer, max_p_len=data_args.p_max_len)
     else:
         raise NotImplementedError

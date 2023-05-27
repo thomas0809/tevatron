@@ -20,9 +20,10 @@ class HFTrainDataset:
                                     data_files=data_files,
                                     cache_dir=cache_dir,
                                     use_auth_token=True)[data_args.dataset_split]
-        if model_args.model_name_or_path.startswith("fingerprint"):
+        self.model_args = model_args
+        if model_args.custom_model_name.startswith("fingerprint"):
             self.preprocessor = TrainPreProcessorFP
-        elif model_args.model_name_or_path.startswith("graph"):
+        elif model_args.custom_model_name.startswith("graph"):
             self.preprocessor = TrainPreProcessorG
         else:
             raise NotImplementedError
@@ -38,7 +39,7 @@ class HFTrainDataset:
         self.dataset = self.dataset.shard(shard_num, shard_idx)
         if self.preprocessor is not None:
             self.dataset = self.dataset.map(
-                self.preprocessor(self.tokenizer, self.q_max_len, self.p_max_len, self.separator),
+                self.preprocessor(self.tokenizer, self.model_args, self.p_max_len, self.separator),
                 batched=False,
                 num_proc=self.proc_num,
                 remove_columns=self.dataset.column_names,
@@ -56,9 +57,9 @@ class HFQueryDataset:
                                     data_args.dataset_language,
                                     data_files=data_files, cache_dir=cache_dir, use_auth_token=True
                                     )[data_args.dataset_split]
-        if model_args.model_name_or_path.startswith("fingerprint"):
+        if model_args.custom_model_name.startswith("fingerprint"):
             self.preprocessor = QueryPreProcessorFP
-        elif model_args.model_name_or_path.startswith("graph"):
+        elif model_args.custom_model_name.startswith("graph"):
             self.preprocessor = QueryPreProcessorG
         else:
             raise NotImplementedError

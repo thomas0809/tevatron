@@ -15,7 +15,7 @@ class CustomModel(DenseModel):
     def encode_query(self, qry):
         if qry is None:
             return None
-        qry_out = self.lm_q(**qry)
+        qry_out = self.lm_q(qry)
         q_reps = qry_out
 
         return q_reps
@@ -27,9 +27,9 @@ class CustomModel(DenseModel):
             train_args: TrainingArguments,
             **hf_kwargs,
     ):
-        if model_args.model_name_or_path.startswith("fingerprint"):
+        if model_args.custom_model_name.startswith("fingerprint"):
             lm_q = FingerprintFFN(model_args)
-        elif model_args.model_name_or_path.startswith("graph"):
+        elif model_args.custom_model_name.startswith("graph"):
             lm_q = GraphDMPNN(model_args)
         else:
             raise NotImplementedError
@@ -62,9 +62,9 @@ class CustomModel(DenseModel):
             model_name_or_path,
             **hf_kwargs,
     ):
-        if model_args.model_name_or_path.startswith("fingerprint"):
+        if model_args.custom_model_name.startswith("fingerprint"):
             lm_q = FingerprintFFN(model_args)
-        elif model_args.model_name_or_path.startswith("graph"):
+        elif model_args.custom_model_name.startswith("graph"):
             lm_q = GraphDMPNN(model_args)
         else:
             raise NotImplementedError
