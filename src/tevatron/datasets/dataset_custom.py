@@ -64,13 +64,14 @@ class HFQueryDataset:
         else:
             raise NotImplementedError
 
+        self.model_args = model_args
         self.proc_num = data_args.dataset_proc_num
 
     def process(self, shard_num=1, shard_idx=0):
         self.dataset = self.dataset.shard(shard_num, shard_idx)
         if self.preprocessor is not None:
             self.dataset = self.dataset.map(
-                self.preprocessor(),
+                self.preprocessor(model_args=self.model_args),
                 batched=False,
                 num_proc=self.proc_num,
                 remove_columns=self.dataset.column_names,

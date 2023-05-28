@@ -5,7 +5,7 @@ from typing import List, Tuple, Union
 import datasets
 from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizer, BatchEncoding, DataCollatorWithPadding
-
+from dataclasses import dataclass
 
 from .arguments import DataArguments
 from .trainer import TevatronTrainer
@@ -88,6 +88,21 @@ class TrainDataset(Dataset):
         return encoded_query, encoded_passages
 
 
+class EncodeDatasetFP(Dataset):
+    input_keys = ['text_id', 'text']
+
+    def __init__(self, dataset: datasets.Dataset):
+        self.encode_data = dataset
+
+    def __len__(self):
+        return len(self.encode_data)
+
+    def __getitem__(self, item) -> Tuple[str, BatchEncoding]:
+        text_id, text = (self.encode_data[item][f] for f in self.input_keys)
+
+        return text_id, text
+
+
 class FPCollator(DataCollatorWithPadding):
     """
     Wrapper that does conversion from List[Tuple[encode_qry, encode_psg]] to List[qry], List[psg]
@@ -116,3 +131,14 @@ class FPCollator(DataCollatorWithPadding):
         )
 
         return q_collated, d_collated
+
+
+@dataclass
+class EncodeCollatorFP:
+    def __call__(self, features):
+        text_ids = [x[0] for x in features]
+        qq = [x[1] for x in features]
+
+        q_collated = torch.as_tensor(qq, dtype=torch.float)
+
+        return text_ids, q_collated
