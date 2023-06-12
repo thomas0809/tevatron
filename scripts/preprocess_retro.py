@@ -6,11 +6,11 @@ from tqdm import tqdm
 
 # data_path = "data/USPTO_50K/matched1/"
 # preprocessed_path = "preprocessed/USPTO_50K/"
-# corpus_file = "data/USPTO_rxn_corpus.csv"
+# corpus_file = "data/USPTO_rxn_corpus_dedup.csv"
 
 data_path = "data/USPTO_50K_year/"
 preprocessed_path = "preprocessed/USPTO_50K_year/"
-corpus_file = "data/USPTO_50K_year/corpus_before_2012.csv"
+corpus_file = "data/USPTO_50K_year/corpus_before_2012_dedup.csv"
 
 def preprocess_corpus():
     print(f"Loading corpus from {corpus_file}")
@@ -30,7 +30,7 @@ def preprocess_corpus():
 def preprocess():
     os.makedirs(preprocessed_path, exist_ok=True)
 
-    corpus_file = "data/USPTO_rxn_corpus.csv"
+    corpus_file = "data/USPTO_rxn_corpus_dedup.csv"
     print(f"Loading corpus from {corpus_file}")
     corpus = pd.read_csv(corpus_file, keep_default_na=False)
 
@@ -48,6 +48,7 @@ def preprocess():
         with open(ofn, "w") as of:
             for i, row in tqdm(rxn_df.iterrows()):
                 query_id = row["id"]
+                corpus_id = row["corpus_id"]
                 if phase == 'train_matched' and query_id.startswith('unk'):
                     continue
                 query = row["product_smiles"]
@@ -61,15 +62,13 @@ def preprocess():
                 if not query_id.startswith('unk'):
                     instance['positive_passages'].append({
                         "docid": query_id,
-                        "title": corpus.at[query_id, "heading_text"],
-                        "text": corpus.at[query_id, "paragraph_text"]
+                        "title": corpus.at[corpus_id, "heading_text"],
+                        "text": corpus.at[corpus_id, "paragraph_text"]
                     })
                 of.write(f"{json.dumps(instance, ensure_ascii=False)}\n")
 
 
 def random_negative():
-    os.makedirs(preprocessed_path, exist_ok=True)
-
     print(f"Loading corpus from {corpus_file}")
     corpus = pd.read_csv(corpus_file, keep_default_na=False)
 
@@ -91,6 +90,6 @@ def random_negative():
 
 
 if __name__ == "__main__":
-    # preprocess()
+    preprocess()
     random_negative()
-    # preprocess_corpus()
+    preprocess_corpus()

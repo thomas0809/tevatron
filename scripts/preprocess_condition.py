@@ -6,12 +6,16 @@ import pandas as pd
 from tqdm import tqdm
 
 
-def preprocess():
-    data_path = "data/USPTO_condition_MIT"
-    preprocessed_path = "preprocessed/USPTO_condition_MIT/"
-    os.makedirs(preprocessed_path, exist_ok=True)
+# data_path = "data/USPTO_condition"
+# preprocessed_path = "preprocessed/USPTO_condition/"
+# corpus_file = "data/USPTO_rxn_corpus_dedup.csv"
 
-    corpus_file = os.path.join("data/USPTO_rxn_corpus.csv")
+data_path = "data/USPTO_condition_year"
+preprocessed_path = "preprocessed/USPTO_condition_year/"
+corpus_file = "data/USPTO_condition_year/corpus_before2015_dedup.csv"
+
+
+def preprocess_corpus():
     print(f"Loading corpus from {corpus_file}")
     corpus = pd.read_csv(corpus_file, keep_default_na=False)
 
@@ -25,6 +29,14 @@ def preprocess():
             }
             of.write(f"{json.dumps(instance, ensure_ascii=False)}\n")
 
+
+def preprocess():
+    os.makedirs(preprocessed_path, exist_ok=True)
+
+    corpus_file = "data/USPTO_rxn_corpus_dedup.csv"
+    print(f"Loading corpus from {corpus_file}")
+    corpus = pd.read_csv(corpus_file, keep_default_na=False)
+
     corpus.set_index("id", inplace=True)
 
     for phase in ["train", "val", "test"]:
@@ -36,6 +48,7 @@ def preprocess():
         with open(ofn, "w") as of:
             for i, row in tqdm(rxn_df.iterrows()):
                 query_id = row["id"]
+                corpus_id = row["corpus_id"]
                 query = row["canonical_rxn"]
 
                 instance = {
@@ -44,8 +57,8 @@ def preprocess():
                     "positive_passages": [
                         {
                             "docid": query_id,
-                            "title": corpus.at[query_id, "heading_text"],
-                            "text": corpus.at[query_id, "paragraph_text"]
+                            "title": corpus.at[corpus_id, "heading_text"],
+                            "text": corpus.at[corpus_id, "paragraph_text"]
                         }
                     ],
                     "negative_passages": []
@@ -54,11 +67,6 @@ def preprocess():
 
 
 def random_negative():
-    data_path = "data/USPTO_condition_year/"
-    preprocessed_path = "preprocessed/USPTO_condition_year/"
-    os.makedirs(preprocessed_path, exist_ok=True)
-
-    corpus_file = os.path.join("data/USPTO_rxn_corpus.csv")
     print(f"Loading corpus from {corpus_file}")
     corpus = pd.read_csv(corpus_file, keep_default_na=False)
 
@@ -80,5 +88,5 @@ def random_negative():
 
 
 if __name__ == "__main__":
-    # preprocess()
+    preprocess()
     random_negative()

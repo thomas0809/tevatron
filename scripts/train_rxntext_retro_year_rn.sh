@@ -1,5 +1,5 @@
 
-MODEL_DIR=output/rxntext_retro_year_rn_b512_ep400
+MODEL_DIR=output/retro_year_b512_ep400
 MASTER_PORT=$(shuf -n 1 -i 10000-65535)
 
 python -m torch.distributed.launch --nproc_per_node=8 --master_port $MASTER_PORT -m tevatron.driver.train \
@@ -76,7 +76,7 @@ python -m torch.distributed.launch --nproc_per_node=1 --master_port $MASTER_PORT
   --per_device_eval_batch_size 1024 \
   --p_max_len 256 \
   --dataset_name json \
-  --encode_in_path preprocessed/USPTO_condition_MIT/corpus.jsonl \
+  --encode_in_path preprocessed/USPTO_condition/corpus.jsonl \
   --encoded_save_path ${MODEL_DIR}/corpus_full.pkl
 
 for split in valid test

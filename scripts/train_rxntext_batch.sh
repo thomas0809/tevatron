@@ -1,16 +1,17 @@
 
-MODEL_DIR=output/rxntext_b512_ep50
+MODEL_DIR=output/condition_b512_ep50
 MASTER_PORT=$(shuf -n 1 -i 10000-65535)
 
 python -m torch.distributed.launch --nproc_per_node=8 --master_port $MASTER_PORT -m tevatron.driver.train \
   --output_dir ${MODEL_DIR} \
-  --train_dir preprocessed/USPTO_condition_MIT/train_rn.jsonl \
+  --train_dir preprocessed/USPTO_condition/train_rn.jsonl \
   --cache_dir cache/ \
   --data_cache_dir cache/data/ \
   --model_name_or_path seyonec/ChemBERTa-zinc-base-v1 \
   --p_model_name_or_path allenai/scibert_scivocab_uncased \
   --do_train \
   --dataloader_num_workers 4 \
+  --dataset_proc_num 64 \
   --save_steps 20000 \
   --fp16 \
   --per_device_train_batch_size 64 \
@@ -32,7 +33,7 @@ python -m torch.distributed.launch --nproc_per_node=1 --master_port $MASTER_PORT
   --per_device_eval_batch_size 256 \
   --p_max_len 256 \
   --dataset_name json \
-  --encode_in_path preprocessed/USPTO_condition_MIT/corpus.jsonl \
+  --encode_in_path preprocessed/USPTO_condition/corpus.jsonl \
   --encoded_save_path ${MODEL_DIR}/corpus.pkl
 
 
@@ -49,7 +50,7 @@ do
     --per_device_eval_batch_size 256 \
     --q_max_len 256 \
     --dataset_name json \
-    --encode_in_path preprocessed/USPTO_condition_MIT/${split}.jsonl \
+    --encode_in_path preprocessed/USPTO_condition/${split}.jsonl \
     --encoded_save_path ${MODEL_DIR}/${split}.pkl \
     --encode_is_qry
 

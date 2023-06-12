@@ -1,5 +1,5 @@
 
-MODEL_DIR=output/rxntext_retro_rn_b512_ep400
+MODEL_DIR=output/retro_b512_ep400
 MASTER_PORT=$(shuf -n 1 -i 10000-65535)
 
 python -m torch.distributed.launch --nproc_per_node=8 --master_port $MASTER_PORT -m tevatron.driver.train \
