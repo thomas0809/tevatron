@@ -6,13 +6,14 @@ import pandas as pd
 from tqdm import tqdm
 
 
-# data_path = "data/USPTO_condition"
-# preprocessed_path = "preprocessed/USPTO_condition/"
-# corpus_file = "data/USPTO_rxn_corpus_dedup.csv"
+data_path = "data/USPTO_condition"
+preprocessed_path = "preprocessed/USPTO_condition/"
+corpus_file = "data/USPTO_rxn_corpus_dedup.csv"
+nn_file = "retrieve/output/USPTO_condition/train.json"
 
-data_path = "data/USPTO_condition_year"
-preprocessed_path = "preprocessed/USPTO_condition_year/"
-corpus_file = "data/USPTO_condition_year/corpus_before2015_dedup.csv"
+# data_path = "data/USPTO_condition_year"
+# preprocessed_path = "preprocessed/USPTO_condition_year/"
+# corpus_file = "data/USPTO_condition_year/corpus_before2015_dedup.csv"
 
 
 def preprocess_corpus():
@@ -87,6 +88,33 @@ def random_negative():
             of.write(f"{json.dumps(instance, ensure_ascii=False)}\n")
 
 
+def similar_positive():
+    corpus_file = "data/USPTO_rxn_corpus.csv"
+    print(f"Loading corpus from {corpus_file}")
+    corpus = pd.read_csv(corpus_file, keep_default_na=False)
+    corpus.set_index("id", inplace=True)
+
+    with open(nn_file) as f:
+        neighbors = json.load(f)
+
+    ofn = os.path.join(preprocessed_path, f"train_sprn.jsonl")
+    lines = open(os.path.join(preprocessed_path, 'train_rn.jsonl')).readlines()
+    with open(ofn, "w") as of:
+        for i, line in tqdm(enumerate(lines)):
+            instance = json.loads(line)
+            assert instance['query_id'] == neighbors[i]['id']
+            for nn_id in neighbors[i]['nn']:
+                if nn_id != instance['query_id'] and not nn_id.startswith('unk'):
+                    instance['positive_passages'].append({
+                        'docid': nn_id,
+                        'title': corpus.at[nn_id, 'heading_text'],
+                        'text': corpus.at[nn_id, 'paragraph_text']
+                    })
+                    break
+            of.write(f"{json.dumps(instance, ensure_ascii=False)}\n")
+
+
 if __name__ == "__main__":
-    preprocess()
-    random_negative()
+    # preprocess()
+    # random_negative()
+    similar_positive()

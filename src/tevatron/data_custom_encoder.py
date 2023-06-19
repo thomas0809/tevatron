@@ -1,11 +1,11 @@
+import torch
 import random
-from dataclasses import dataclass
 from typing import List, Tuple, Union
 
 import datasets
 from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizer, BatchEncoding, DataCollatorWithPadding
-
+from dataclasses import dataclass
 
 from .arguments import DataArguments
 from .trainer import TevatronTrainer
@@ -56,7 +56,7 @@ class TrainDataset(Dataset):
         _hashed_seed = hash(item + self.trainer.args.seed)
 
         qry = group['query']
-        encoded_query = self.create_one_example(qry, is_query=True)
+        encoded_query = qry
 
         encoded_passages = []
         group_positives = group['positives']
@@ -88,59 +88,42 @@ class TrainDataset(Dataset):
         return encoded_query, encoded_passages
 
 
-class EncodeDataset(Dataset):
+class EncodeDatasetFP(Dataset):
     input_keys = ['text_id', 'text']
 
-    def __init__(self, dataset: datasets.Dataset, tokenizer: PreTrainedTokenizer, max_len=128):
+    def __init__(self, dataset: datasets.Dataset):
         self.encode_data = dataset
-        self.tok = tokenizer
-        self.max_len = max_len
 
     def __len__(self):
         return len(self.encode_data)
 
     def __getitem__(self, item) -> Tuple[str, BatchEncoding]:
         text_id, text = (self.encode_data[item][f] for f in self.input_keys)
-        encoded_text = self.tok.prepare_for_model(
-            text,
-            max_length=self.max_len,
-            truncation='only_first',
-            padding=False,
-            return_token_type_ids=False,
-        )
-        return text_id, encoded_text
+
+        return text_id, text
 
 
-class QPCollator(DataCollatorWithPadding):
+class FPCollator(DataCollatorWithPadding):
     """
     Wrapper that does conversion from List[Tuple[encode_qry, encode_psg]] to List[qry], List[psg]
     and pass batch separately to the actual collator.
     Abstract out data detail for the model.
     """
-    def __init__(self, tokenizer: TOKENIZER_TYPE, max_q_len: int = 32, max_p_len: int = 128):
-        if isinstance(tokenizer, PreTrainedTokenizer):
-            self.q_tokenizer, self.p_tokenizer = tokenizer, tokenizer
-        else:
-            self.q_tokenizer, self.p_tokenizer = tokenizer
-        self.max_q_len = max_q_len
+    def __init__(self, tokenizer, max_p_len: int = 128):
+        self.q_tokenizer, self.p_tokenizer = tokenizer
+        assert self.q_tokenizer is None
+
         self.max_p_len = max_p_len
 
     def __call__(self, features):
         qq = [f[0] for f in features]
         dd = [f[1] for f in features]
 
-        if isinstance(qq[0], list):
-            qq = sum(qq, [])
         if isinstance(dd[0], list):
             dd = sum(dd, [])
 
-        q_collated = self.q_tokenizer.pad(
-            qq,
-            padding='max_length',
-            max_length=self.max_q_len,
-            return_tensors="pt",
-        )
-        d_collated = self.q_tokenizer.pad(
+        q_collated = torch.as_tensor(qq, dtype=torch.float)      # -> (b, fp_size)
+        d_collated = self.p_tokenizer.pad(
             dd,
             padding='max_length',
             max_length=self.max_p_len,
@@ -151,9 +134,11 @@ class QPCollator(DataCollatorWithPadding):
 
 
 @dataclass
-class EncodeCollator(DataCollatorWithPadding):
+class EncodeCollatorFP:
     def __call__(self, features):
         text_ids = [x[0] for x in features]
-        text_features = [x[1] for x in features]
-        collated_features = super().__call__(text_features)
-        return text_ids, collated_features
+        qq = [x[1] for x in features]
+
+        q_collated = torch.as_tensor(qq, dtype=torch.float)
+
+        return text_ids, q_collated

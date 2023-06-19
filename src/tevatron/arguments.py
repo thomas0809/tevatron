@@ -7,8 +7,11 @@ from transformers import TrainingArguments
 
 @dataclass
 class ModelArguments:
-    model_name_or_path: str = field(
-        metadata={"help": "Path to pretrained model or model identifier from huggingface.co/models"}
+    custom_model_name: Optional[str] = field(
+        default=None
+    )
+    model_name_or_path: Optional[str] = field(
+        default=None, metadata={"help": "Path to pretrained model or model identifier from huggingface.co/models"}
     )
     config_name: Optional[str] = field(
         default=None, metadata={"help": "Pretrained config name or path if not the same as model_name"}
@@ -27,6 +30,24 @@ class ModelArguments:
     )
     p_model_name_or_path: Optional[str] = field(
         default=None, metadata={"help": "Name or path of the passage encoder, if different to qry"}
+    )
+    fp_radius: int = field(
+        default=2,
+        metadata={
+            "help": "Fingerprint radius"
+        },
+    )
+    fp_size: int = field(
+        default=2048,
+        metadata={
+            "help": "Fingerprint size"
+        },
+    )
+    ffn_dropout: float = field(
+        default=0.1,
+        metadata={
+            "help": "Feedforward dropout"
+        },
     )
 
     # out projection

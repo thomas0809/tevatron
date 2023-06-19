@@ -76,7 +76,7 @@ python -m torch.distributed.launch --nproc_per_node=1 --master_port $MASTER_PORT
   --per_device_eval_batch_size 1024 \
   --p_max_len 256 \
   --dataset_name json \
-  --encode_in_path preprocessed/USPTO_condition/corpus.jsonl \
+  --encode_in_path preprocessed/USPTO_50K/corpus.jsonl \
   --encoded_save_path ${MODEL_DIR}/corpus_full.pkl
 
 for split in valid test

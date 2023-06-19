@@ -6,7 +6,7 @@
 4. Preprocessing script for reaction condition recommendation `scripts/preprocess_condition.py`,
 for retrosynthesis `scripts/preprocess_retro.py`
 5. Example scripts for train/encode/retrieve
-   - USPTO_condition_MIT: `scripts/train_rxntext_batch.sh`
+   - USPTO_condition: `scripts/train_rxntext_batch.sh`
    - USPTO_condition_year: `scripts/train_rxntest_year.sh`
    - USPTO_50K: `scripts/train_rxntext_retro_rn.sh`
    - USPTO_50K_year: `scripts/train_rxntext_retro_year_rn.sh`
