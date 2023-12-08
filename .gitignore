@@ -5,5 +5,4 @@ __pycache__/
 
 data/*
 preprocessed/*
-scripts/*.sh
 

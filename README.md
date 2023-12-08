@@ -1,19 +1,40 @@
-# Instructions
+# Tevatron for TextReact
+This repository contains the training code for the SMILES-to-text retriever of [TextReact](https://github.com/thomas0809/textreact). 
+It is forked from [Tevatron](https://github.com/texttron/tevatron).
 
-1. Follow the instructions below and install this repo as editable;
-2. Path of original data `/Mounts/rbg-storage1/users/yujieq/textreact/data`
-3. Path of preprocessed data for Tevatron `/Mounts/rbg-storage1/users/yujieq/tevatron/preprocessed`
-4. Preprocessing script for reaction condition recommendation `scripts/preprocess_condition.py`,
-for retrosynthesis `scripts/preprocess_retro.py`
-5. Example scripts for train/encode/retrieve
-   - USPTO_condition: `scripts/train_rxntext_batch.sh`
-   - USPTO_condition_year: `scripts/train_rxntest_year.sh`
-   - USPTO_50K: `scripts/train_rxntext_retro_rn.sh`
-   - USPTO_50K_year: `scripts/train_rxntext_retro_year_rn.sh`
-6. Evaluation script 
+Contact: Yujie Qian [yujieq@csail.mit.edu](mailto:yujieq@csail.mit.edu)
+
+## Installation
+Follow the [installation instruction](#installation) below and **install this repo as editable**.
+```bash
+conda install -c pytorch faiss-cpu=1.7.4 mkl=2021 blas=1.0=mkl
+pip install --editable .
+```
+
+## Data
+Download the [preprocessed data](https://huggingface.co/datasets/yujieq/TextReact/resolve/main/Tevatron_data.zip) 
+   and unzip the files to `preprocessed/` directory;
+   ```bash
+   wget https://huggingface.co/datasets/yujieq/TextReact/resolve/main/Tevatron_data.zip
+   unzip Tevatron_data.zip
+   mv Tevatron_data preprocessed
    ```
-   python -m tevatron.faiss_retriever.evaluate --corpus data/USPTO_rxn_corpus.csv --file output/rxntext_b512_ep50/test_rank.json
+
+## Scripts
+The following scripts can be used to reproduce the TextReact experiments. Each script contains the commands for train/encode/retrieve.
+- RCR: [`scripts/train_RCR.sh`](scripts/train_RCR.sh)
+- RCR (TS): [`scripts/train_RCR_TS.sh`](scripts/train_RCR_TS.sh)
+- RetroSyn: [`scripts/train_RetroSyn.sh`](scripts/train_RetroSyn.sh)
+- RetroSyn (TS): [`scripts/train_RetroSyn_TS.sh`](scripts/train_RetroSyn.sh)
+
+Evaluation of retriever performance (take RCR as an example): 
+   ```bash
+   python -m tevatron.faiss_retriever.evaluate --corpus data/USPTO_rxn_corpus.csv --file output/RCR/test_rank.json
    ```
+
+------
+
+The following is the original README of Tevatron.
 
 # Tevatron
 Tevatron is a simple and efficient toolkit for training and running dense retrievers with deep language models. 
