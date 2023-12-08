@@ -4,7 +4,7 @@ It is forked from [Tevatron](https://github.com/texttron/tevatron).
 
 Contact: Yujie Qian [yujieq@csail.mit.edu](mailto:yujieq@csail.mit.edu)
 
-## Installation
+## Setup
 Follow the [installation instruction](#installation) below and **install this repo as editable**.
 ```bash
 conda install -c pytorch faiss-cpu=1.7.4 mkl=2021 blas=1.0=mkl
@@ -12,13 +12,21 @@ pip install --editable .
 ```
 
 ## Data
-Download the [preprocessed data](https://huggingface.co/datasets/yujieq/TextReact/resolve/main/Tevatron_data.zip) 
-   and unzip the files to `preprocessed/` directory;
-   ```bash
-   wget https://huggingface.co/datasets/yujieq/TextReact/resolve/main/Tevatron_data.zip
-   unzip Tevatron_data.zip
-   mv Tevatron_data preprocessed
-   ```
+If you have already downloaded the data in TextReact, create soft links in this repo.
+```bash
+ln -s /path/to/textreact/data data
+ln -s /path/to/textreact/data/Tevatron_data preprocessed
+```
+
+Otherwise, (1) download the [corpus]() to `data/`, and (2) download the [preprocessed data](https://huggingface.co/datasets/yujieq/TextReact/resolve/main/Tevatron_data.zip) 
+to `preprocessed/`.
+```bash
+wget https://huggingface.co/datasets/yujieq/TextReact/resolve/main/USPTO_rxn_corpus.zip
+unzip USPTO_rxn_corpus.zip -d data
+wget https://huggingface.co/datasets/yujieq/TextReact/resolve/main/Tevatron_data.zip
+unzip Tevatron_data.zip
+mv Tevatron_data preprocessed
+```
 
 ## Scripts
 The following scripts can be used to reproduce the TextReact experiments. Each script contains the commands for train/encode/retrieve.
